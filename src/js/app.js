@@ -1,15 +1,17 @@
 import $ from 'jquery';
 import {parseCode} from './code-analyzer';
 import {substitute_program_expr} from './symbolic-substitution';
+import {paint_program} from './code-painter';
 
 $(document).ready(function () {
     $('#codeSubmissionButton').click(() => {
         let codeToParse = $('#codePlaceholder').val();
+        let inputVector = $('#inputVector').val().split(',');
         let parsedCode = parseCode(codeToParse);
         let substituted_code = substitute_program_expr(parsedCode);
-        // $('#parsedCode').val(JSON.stringify(substituted_code, null, 2));
+        let painted_func = paint_program(parsedCode,inputVector);
         $('#parsedCode').val(substituted_code);
-        // $('#parsedCode').val(JSON.stringify(parsedCode.body, null, 2));
+        $('#painedCode').val(painted_func);
     });
 });
 
