@@ -30,17 +30,25 @@ function substitute_func_decl(func_decl, scope) {
     return func_decl;
 }
 
-function remove_decl_and_assignment(code) {
-    if (code.type === 'IfStatement') {
-        code.consequent = remove_decl_and_assignment(code.consequent);
-        code.alternate = remove_decl_and_assignment(code.alternate);
-    } else if (code.type === 'WhileStatement' || code.type === 'FunctionDeclaration')
-        code.body = remove_decl_and_assignment(code.body);
-    else if (code.type === 'BlockStatement') {
-        code.body = code.body.filter((e) => e.type !== 'VariableDeclaration' && (e.type !== 'ExpressionStatement' ||
-            e.expression.type !== 'AssignmentExpression' || func_params.includes(escodegen.generate(e.expression.left)))).map((e) => remove_decl_and_assignment(e));
-    }
+const remove_decl_and_assignment = code => code.type === 'IfStatement' ? remove_in_if_stmt(code) :
+    (code.type === 'WhileStatement' || code.type === 'FunctionDeclaration') ?  remove_in_while_and_func_decl(code) :
+        code.type === 'BlockStatement' ? remove_in_block_stmt(code) : code;
+
+function remove_in_if_stmt(if_stmt) {
+    if_stmt.consequent = remove_decl_and_assignment(if_stmt.consequent);
+    if_stmt.alternate = if_stmt.alternate ? remove_decl_and_assignment(if_stmt.alternate) : if_stmt.alternate;
+    return if_stmt;
+}
+
+function remove_in_while_and_func_decl(code) {
+    code.body = remove_decl_and_assignment(code.body);
     return code;
+}
+
+function remove_in_block_stmt(block_stmt) {
+    block_stmt.body = block_stmt.body.filter((e) => e.type !== 'VariableDeclaration' && (e.type !== 'ExpressionStatement' ||
+        e.expression.type !== 'AssignmentExpression' || func_params.includes(escodegen.generate(e.expression.left)))).map((e) => remove_decl_and_assignment(e));
+    return block_stmt;
 }
 
 const substitute = (e, scope) => sub_func_map[e.type] ? sub_func_map[e.type](e, scope) : e;
@@ -69,7 +77,7 @@ function substitute_while_stmt(while_stmt, scope) {
 function substitute_if_stmt(if_stmt, scope) {
     if_stmt.test = substitute(if_stmt.test, scope);
     if_stmt.consequent = substitute(if_stmt.consequent, new Scope(copy_map(scope.bindings)));
-    if_stmt.alternate = substitute(if_stmt.alternate, new Scope(copy_map(scope.bindings)));
+    if_stmt.alternate =  if_stmt.alternate ? substitute(if_stmt.alternate, new Scope(copy_map(scope.bindings))) : if_stmt.alternate;
     return if_stmt;
 }
 

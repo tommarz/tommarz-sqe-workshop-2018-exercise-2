@@ -18,7 +18,6 @@ $(document).ready(function () {
         split_painted_string.forEach((str)=> painted_string+=str + '<br>');
         painted_string+='</pre>';
         painted_code_selector.append(painted_string);
-        // paintedCode.append('<textarea>hello</textarea>');
     });
 });
 
