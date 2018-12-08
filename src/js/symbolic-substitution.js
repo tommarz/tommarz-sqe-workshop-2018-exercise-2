@@ -18,8 +18,9 @@ function substitute_program_expr(program) {
         e = substitute(e, globalScope);
         return e;
     });
-    program.body = program.body.filter((e) => e.type !== 'VariableDeclaration' && (e.type !== 'ExpressionStatement' ||
-        e.expression.type !== 'AssignmentExpression')).map((e) => remove_decl_and_assignment(e));
+    // program.body = program.body.filter((e) => e.type !== 'VariableDeclaration' && (e.type !== 'ExpressionStatement' ||
+    //     e.expression.type !== 'AssignmentExpression')).map((e) => remove_decl_and_assignment(e));
+    program.body = program.body.filter((e) => e.type !== 'VariableDeclaration' && e.type !== 'ExpressionStatement').map((e) => remove_decl_and_assignment(e));
     return escodegen.generate(program);
 }
 
@@ -59,7 +60,7 @@ function substitute_block_stmt(stmt, scope) {
 }
 
 function substitute_while_stmt(while_stmt, scope) {
-    let innerScope = new Scope(scope.bindings);
+    let innerScope = new Scope(copy_map(scope.bindings));
     while_stmt.test = substitute(while_stmt.test, innerScope);
     while_stmt.body = substitute(while_stmt.body, innerScope);
     return while_stmt;

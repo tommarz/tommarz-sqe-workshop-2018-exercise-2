@@ -88,4 +88,4 @@ function block_stmnt_handler(block) {
 function update_expr_handler(node) {
     records.push(new Record(node.loc.start.line, node.type, node_to_string(node.argument), null,  node_to_string(node)));
 }
-export {parseCode, ast_handler, node_to_string};
+export {parseCode, node_to_string};
