@@ -10,21 +10,12 @@ function Scope(bindings) {
     this.bindings = bindings;
 }
 
-// function copy_map(map) {
-//     let newMap = {};
-//     for (let i in map)
-//         newMap[i] = map[i];
-//     return newMap;
-// }
-
 const copy_map = (map) => JSON.parse(JSON.stringify(map));
 
 function substitute_program_expr(program) {
-    // program.body = substitute_func_decl(program.body);
     let globalScope = new Scope({});
     program.body.forEach((e) => {
         e = substitute(e, globalScope);
-        // console.log(globalScope);
         return e;
     });
     program.body = program.body.filter((e) => e.type !== 'VariableDeclaration' && (e.type !== 'ExpressionStatement' ||
@@ -35,7 +26,6 @@ function substitute_program_expr(program) {
 function substitute_func_decl(func_decl, scope) {
     func_params = func_decl.params.map((param) => escodegen.generate(param));
     func_decl.body = substitute(func_decl.body, new Scope(scope.bindings));
-    // func_decl.body = remove_decl_and_assignment(func_decl.body);
     return func_decl;
 }
 
@@ -47,14 +37,11 @@ function remove_decl_and_assignment(code) {
         code.body = remove_decl_and_assignment(code.body);
     else if (code.type === 'BlockStatement') {
         code.body = code.body.filter((e) => e.type !== 'VariableDeclaration' && (e.type !== 'ExpressionStatement' ||
-            e.expression.type !== 'AssignmentExpression')).map((e) => remove_decl_and_assignment(e));
+            e.expression.type !== 'AssignmentExpression' || func_params.includes(escodegen.generate(e.expression.left)))).map((e) => remove_decl_and_assignment(e));
     }
     return code;
 }
 
-const is_func_param = (identifier) => func_params.includes(escodegen.generate(identifier));
-
-// return e.type === 'Literal' ? e : sub_func_map[e.type] ? sub_func_map[e.type](e, scope) : e;
 const substitute = (e, scope) => sub_func_map[e.type] ? sub_func_map[e.type](e, scope) : e;
 
 function substitute_expr_stmt(expr_stmt, scope) {
@@ -79,7 +66,6 @@ function substitute_while_stmt(while_stmt, scope) {
 }
 
 function substitute_if_stmt(if_stmt, scope) {
-    // let innerScope = new Scope(copy_map(scope.bindings));
     if_stmt.test = substitute(if_stmt.test, scope);
     if_stmt.consequent = substitute(if_stmt.consequent, new Scope(copy_map(scope.bindings)));
     if_stmt.alternate = substitute(if_stmt.alternate, new Scope(copy_map(scope.bindings)));
@@ -109,7 +95,7 @@ function substitute_bin_expr(bin_expr, scope) {
         bin_expr.left : bin_expr;
 }
 
-const substitute_identifier = (identifier, scope) => (is_func_param(identifier) ? identifier : substitute(scope.bindings[escodegen.generate(identifier)], scope));
+const substitute_identifier = (identifier, scope) => scope.bindings[escodegen.generate(identifier)] ? substitute(scope.bindings[escodegen.generate(identifier)], scope) : identifier;
 
 const substitute_mem_expr = (mem_expr, scope) => substitute(scope.bindings[escodegen.generate(mem_expr.object)].elements[parseInt(mem_expr.property['value'])], scope);
 

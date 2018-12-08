@@ -1,66 +1,50 @@
 import * as escodegen from 'escodegen';
-import * as esprima from 'esprima';
+// import * as esprima from 'esprima';
+import {Parser} from 'expr-eval';
 
 let param_bindings = {};
+
+let fun_str;
 
 function bind_params(func_decl, input) {
     let func_params = func_decl.params.map((param) => escodegen.generate(param));
     for (let i = 0; i < input.length; i++)
-        param_bindings[func_params[i]] = esprima.parse(input[i]).body[0].expression;
+        // param_bindings[func_params[i]] = esprima.parse(input[i]).body[0].expression; // bind Literal
+        param_bindings[func_params[i]] = input[i]; // bind number
 }
 
 function paint_program(program, input) {
-    let func_decl = program.body[0];
-    program.body[0] = paint_func_decl(func_decl, input);
-    return escodegen.generate(program);
+    fun_str = escodegen.generate(program);
+    paint_func_decl(program.body[0], input);
+    return fun_str;
 }
+
+const paint = code => code ? paint_func_map[code.type] ? paint_func_map[code.type](code) : code : code;
 
 function paint_func_decl(func_decl, input) {
     bind_params(func_decl, input);
-    func_decl.body = substitute_params(func_decl.body);
-    return func_decl;
+    paint(func_decl.body);
 }
 
-const substitute_params = (code) => sub_param_func_map[code.type] ? sub_param_func_map[code.type](code) : code;
-
-function sub_param_block_stmt (block_stmt) {
-    block_stmt.body = block_stmt.body.map((e) => substitute_params(e));
-    return block_stmt;
+function paint_if_stmt(if_expr) {
+    let parsed_test = Parser.parse(escodegen.generate(if_expr.test));
+    let eval_test = parsed_test.evaluate(param_bindings);
+    fun_str = eval_test ? fun_str.replace(escodegen.generate(if_expr.test), '<mark style="background-color:green">' + escodegen.generate(if_expr.test) + '</mark>'):
+        fun_str.replace(escodegen.generate(if_expr.test), '<mark style="background-color:red">' + escodegen.generate(if_expr.test) + '</mark>');
+    paint(if_expr.consequent);
+    paint(if_expr.alternate);
 }
 
-function sub_param_if_stmt(if_stmt) {
-    if_stmt.test = substitute_params(if_stmt.test);
-    if_stmt.consequent = substitute_params(if_stmt.consequent);
-    if_stmt.alternate = substitute_params(if_stmt.alternate);
-    return if_stmt;
-}
+const paint_block_stmt = block_stmt => block_stmt.body.forEach((e) => paint(e));
 
-function sub_param_while_stmt_func_decl(code) {
-    code.body = substitute_params(code.body);
-    return code;
-}
+const paint_while_stmt = code => code.body = paint(code.body);
 
-const sub_param_identifier = (identifier) => param_bindings[identifier.name];
+let paint_func_map = {
+    'BlockStatement': paint_block_stmt,
+    'IfStatement': paint_if_stmt,
+    'WhileStatement': paint_while_stmt,
+    'FunctionDeclaration': paint_func_decl,
 
-function sub_param_bin_expr(bin_expr) {
-    bin_expr.left = substitute_params(bin_expr.left);
-    bin_expr.right = substitute_params(bin_expr.right);
-    return bin_expr;
-}
-
-function sub_param_ret_stmt(ret_stmt) {
-    ret_stmt.argument = substitute_params(ret_stmt.argument);
-    return ret_stmt;
-}
-
-let sub_param_func_map = {
-    'BlockStatement' : sub_param_block_stmt,
-    'IfStatement' : sub_param_if_stmt,
-    'WhileStatement': sub_param_while_stmt_func_decl,
-    'FunctionDeclaration' : sub_param_while_stmt_func_decl,
-    'Identifier': sub_param_identifier,
-    'BinaryExpression': sub_param_bin_expr,
-    'ReturnStatement': sub_param_ret_stmt
 };
 
 export {paint_program};
