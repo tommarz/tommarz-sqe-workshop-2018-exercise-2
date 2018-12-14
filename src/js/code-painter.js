@@ -29,8 +29,8 @@ function paint_func_decl(func_decl, input) {
 function paint_if_stmt(if_expr) {
     let parsed_test = Parser.parse(escodegen.generate(if_expr.test));
     let eval_test = parsed_test.evaluate(param_bindings);
-    fun_str = eval_test ? fun_str.replace(escodegen.generate(if_expr.test), '<mark style="background-color:green">' + escodegen.generate(if_expr.test) + '</mark>'):
-        fun_str.replace(escodegen.generate(if_expr.test), '<mark style="background-color:red">' + escodegen.generate(if_expr.test) + '</mark>');
+    fun_str = eval_test ? fun_str.replace('('+escodegen.generate(if_expr.test)+')', '(<mark style="background-color:green">' + escodegen.generate(if_expr.test) + '</mark>)'):
+        fun_str.replace('('+escodegen.generate(if_expr.test)+')', '(<mark style="background-color:red">' + escodegen.generate(if_expr.test) + '</mark>)');
     paint(if_expr.consequent);
     paint(if_expr.alternate);
 }

@@ -83,7 +83,7 @@ function substitute_if_stmt(if_stmt, scope) {
 
 function substitute_assignment_expr(expr, scope) {
     expr.right = substitute(expr.right, scope);
-    add_binding(scope, escodegen.generate(expr.left), expr.right);
+    expr.left.type === 'MemberExpression' ?  scope.bindings[escodegen.generate(expr.left.object)].elements[parseInt(expr.left.property['value'])] = expr.right :
     return expr;
 }
 

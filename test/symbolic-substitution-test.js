@@ -53,3 +53,20 @@ describe('The symbolic substitute', () => {
             '    return x ^ y;\n}');
     });
 });
+
+describe('The symbolic substitute', () => {
+    it('is substituting a program with assigning input arguments to arrays', () => {
+        assert.deepEqual(substitute_program_expr(esprima.parseScript('let arr = [1,2,3];\nfunction foo(x, y, z){\n' +
+            '    let b = arr[0] + y;\n    let c = 0;\n    arr[1] = 2 * arr[2] + y;\n    if (b < z) {\n        c = arr[1] + b;\n' +
+            '        return x + y + z + c;\n    } else {\n        c = c + z + 5;\n        return x + y + z + c;\n    }\n}')),
+        'function foo(x, y, z) {\n    if (1 + y < z) {\n        return x + y + z + (2 * 3 + y + (1 + y));\n    } else {\n' +
+            '        return x + y + z + (z + 5);\n    }\n}');
+    });
+    it('is substituting a program with global variables with values from the input vector correctly', () => {
+        assert.deepEqual(substitute_program_expr(esprima.parseScript('let a = x + 1;\nlet b = a + y;\nlet c = 0;\nfunction foo(x, y, z){    \n' +
+            '    while (a < z) {\n        if(b < x + y) {\n            c = a + b;\n            z = c * 2;\n        }\n' +
+            '    }\n    return z;\n}')),
+        'function foo(x, y, z) {\n    while (x + 1 < z) {\n        if (x + 1 + y < x + y) {\n' +
+            '            z = (x + 1 + (x + 1 + y)) * 2;\n        }\n    }\n    return z;\n}');
+    });
+});
