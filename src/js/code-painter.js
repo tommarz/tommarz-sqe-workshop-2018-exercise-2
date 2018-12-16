@@ -44,7 +44,6 @@ let paint_func_map = {
     'IfStatement': paint_if_stmt,
     'WhileStatement': paint_while_stmt,
     'FunctionDeclaration': paint_func_decl,
-
 };
 
 export {paint_program};
