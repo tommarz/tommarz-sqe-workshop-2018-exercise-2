@@ -6,7 +6,7 @@ import {paint_program} from './code-painter';
 $(document).ready(function () {
     $('#codeSubmissionButton').click(() => {
         let codeToParse = $('#codePlaceholder').val();
-        let inputVector = $('#inputVector').val().split(',');
+        let inputVector = parseCode($('#inputVector').val());
         let parsedCode = parseCode(codeToParse);
         let substituted_code = substitute_program_expr(parsedCode);
         $('#parsedCode').val(substituted_code);

@@ -75,15 +75,42 @@ describe('The symbolic substitute', () => {
     });
 });
 
+let array_example = esprima.parseScript('function foo(x, y, z){\n' +
+    '    let a = x[0] + 1;\n' +
+    '    let b = a + y;\n' +
+    '    if (b < z) {\n' +
+    '        return x[1] + y + z;\n' +
+    '    }\n' +
+    '}');
+substitute_program_expr(array_example);
+
 describe('The painter', () => {
     it('is painting Aviram\'s first example correctly', () => {
-        assert.deepEqual(paint_program(first_example, [1, 2, 3]), '<pre>function foo(x, y, z) {<br>' +
+        assert.deepEqual(paint_program(first_example, esprima.parseScript('1, 2, 3')), '<pre>function foo(x, y, z) {<br>' +
             '<mark style="background-color:red">    if (x + 1 + y < z) {</mark><br>' +
             '        return x + y + z + 5;<br><mark style="background-color:green">    } else if (x + 1 + y < z * 2) {</mark><br>' +
             '        return x + y + z + (x + 5);<br>    } else {<br>        return x + y + z + (z + 5);<br>    }<br>}<br></pre>');
     });
     it('is painting Aviram\'s second example correctly', () => {
-        assert.deepEqual(paint_program(second_example, [4, 5, 6]), '<pre>function foo(x, y, z) {<br>    while (x + 1 < z) {<br>' +
+        assert.deepEqual(paint_program(second_example, esprima.parseScript('4, 5, 6')), '<pre>function foo(x, y, z) {<br>    while (x + 1 < z) {<br>' +
             '        z = (x + 1 + (x + 1 + y)) * 2;<br>    }<br>    return z;<br>}<br></pre>');
     });
+    it('is painting if statements with array in the input vector', () => {
+        assert.deepEqual(paint_program(array_example, esprima.parseScript('[1,2], 3 ,7')), '<pre>function foo(x, y, z) {<br>' +
+            '<mark style="background-color:green">    if (x[0] + 1 + y < z) {</mark><br>' +
+            '        return x[1] + y + z;<br>    }<br>}<br></pre>');
+    });
+});
+
+let single_arg_example = esprima.parseScript('function foo(x) {\n' +
+    '    if (x < 10) {\n' +
+    '        return x;\n' +
+    '    }\n' +
+    '}');
+substitute_program_expr(single_arg_example);
+
+it('The painter is painting programs with a single argument correctly', ()=> {
+    assert.deepEqual(paint_program(single_arg_example, esprima.parseScript('12')), '<pre>function foo(x) {<br>' +
+        '<mark style="background-color:red">    if (x < 10) {</mark><br>' +
+        '        return x;<br>    }<br>}<br></pre>');
 });

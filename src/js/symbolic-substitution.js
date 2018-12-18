@@ -107,7 +107,8 @@ function substitute_bin_expr(bin_expr, scope) {
 
 const substitute_identifier = (identifier, scope) => scope.bindings[escodegen.generate(identifier)] ? substitute(scope.bindings[escodegen.generate(identifier)], scope) : identifier;
 
-const substitute_mem_expr = (mem_expr, scope) => substitute(scope.bindings[escodegen.generate(mem_expr.object)].elements[parseInt(mem_expr.property['value'])], scope);
+const substitute_mem_expr = (mem_expr, scope) => scope.bindings[escodegen.generate(mem_expr.object)] ?
+    substitute(scope.bindings[escodegen.generate(mem_expr.object)].elements[parseInt(mem_expr.property['value'])], scope) : mem_expr;
 
 let sub_func_map = {
     'BlockStatement': substitute_block_stmt,
@@ -123,4 +124,4 @@ let sub_func_map = {
     'MemberExpression': substitute_mem_expr
 };
 
-export {substitute_program_expr};
+export {substitute_program_expr, substitute, Scope};

@@ -1,6 +1,5 @@
 import * as escodegen from 'escodegen';
-// import * as esprima from 'esprima';
-import {Parser} from 'expr-eval';
+import {substitute, Scope} from './symbolic-substitution';
 
 let param_bindings = {};
 
@@ -12,9 +11,14 @@ function bind_params(func_decl, input) {
         param_bindings[func_params[i]] = input[i]; // bind number
 }
 
+const parse_input_vector = input =>
+    input.expression.type === 'SequenceExpression' ?
+        input.expression.expressions :  [input.expression];
+
 function paint_program(program, input) {
     fun_str = escodegen.generate(program);
-    paint_func_decl(program.body[0], input);
+    let parsedInput =  parse_input_vector(input.body[0]);
+    paint_func_decl(program.body[0],parsedInput);
     let split_painted_string = fun_str.split('\n');
     fun_str = '<pre>';
     split_painted_string.forEach((str)=> fun_str+=paint_line(str) + '<br>');
@@ -27,7 +31,7 @@ const paint_line = line => line.includes('<mark style="background-color:green">'
     line.includes('<mark style="background-color:red">') ? '<mark style="background-color:red">'
         + line.replace('<mark style="background-color:red">','').replace('</mark>','') + '</mark>' : line;
 
-const paint = code => paint_func_map[code.type] ? paint_func_map[code.type](code) : code;
+const paint = code => code ? paint_func_map[code.type] ? paint_func_map[code.type](code) : code: code;
 
 function paint_func_decl(func_decl, input) {
     bind_params(func_decl, input);
@@ -35,8 +39,9 @@ function paint_func_decl(func_decl, input) {
 }
 
 function paint_if_stmt(if_expr) {
-    let parsed_test = Parser.parse(escodegen.generate(if_expr.test));
-    let eval_test = parsed_test.evaluate(param_bindings);
+    let test = JSON.parse(JSON.stringify(if_expr.test));
+    let substituted_test = escodegen.generate(substitute(test, new Scope(param_bindings)));
+    let eval_test = eval(substituted_test);
     fun_str = eval_test ? fun_str.replace('('+escodegen.generate(if_expr.test)+')', '(<mark style="background-color:green">' + escodegen.generate(if_expr.test) + '</mark>)'):
         fun_str.replace('('+escodegen.generate(if_expr.test)+')', '(<mark style="background-color:red">' + escodegen.generate(if_expr.test) + '</mark>)');
     paint(if_expr.consequent);
