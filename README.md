@@ -13,7 +13,7 @@
     * Try the parser... 
 * For testing, this project uses the [Mocha](https://mochajs.org/) library.
     * From the command-line run: `npm run test`
-    * See example test in `test/symbolic-substitution-test.js`
+    * See example test in `test/symbolic-substitution_code-painter.test.js`
 * For coverage, this project uses the [nyc](https://github.com/istanbuljs/nyc) library.
     * From the command-line run: `npm run coverage`
     * Run `coverage/lcov-report/index.html` to see the html report

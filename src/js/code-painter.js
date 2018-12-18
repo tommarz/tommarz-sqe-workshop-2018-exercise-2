@@ -9,7 +9,6 @@ let fun_str;
 function bind_params(func_decl, input) {
     let func_params = func_decl.params.map((param) => escodegen.generate(param));
     for (let i = 0; i < input.length; i++)
-        // param_bindings[func_params[i]] = esprima.parse(input[i]).body[0].expression; // bind Literal
         param_bindings[func_params[i]] = input[i]; // bind number
 }
 
@@ -18,10 +17,15 @@ function paint_program(program, input) {
     paint_func_decl(program.body[0], input);
     let split_painted_string = fun_str.split('\n');
     fun_str = '<pre>';
-    split_painted_string.forEach((str)=> fun_str+=str + '<br>');
+    split_painted_string.forEach((str)=> fun_str+=paint_line(str) + '<br>');
     fun_str+='</pre>';
     return fun_str;
 }
+
+const paint_line = line => line.includes('<mark style="background-color:green">') ? '<mark style="background-color:green">'
+    + line.replace('<mark style="background-color:green">','').replace('</mark>','') + '</mark>' :
+    line.includes('<mark style="background-color:red">') ? '<mark style="background-color:red">'
+        + line.replace('<mark style="background-color:red">','').replace('</mark>','') + '</mark>' : line;
 
 const paint = code => paint_func_map[code.type] ? paint_func_map[code.type](code) : code;
 

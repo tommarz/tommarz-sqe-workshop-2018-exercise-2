@@ -78,8 +78,8 @@ describe('The symbolic substitute', () => {
 describe('The painter', () => {
     it('is painting Aviram\'s first example correctly', () => {
         assert.deepEqual(paint_program(first_example, [1, 2, 3]), '<pre>function foo(x, y, z) {<br>' +
-            '    if (<mark style="background-color:red">x + 1 + y < z</mark>) {<br>' +
-            '        return x + y + z + 5;<br>    } else if (<mark style="background-color:green">x + 1 + y < z * 2</mark>) {<br>' +
+            '<mark style="background-color:red">    if (x + 1 + y < z) {</mark><br>' +
+            '        return x + y + z + 5;<br><mark style="background-color:green">    } else if (x + 1 + y < z * 2) {</mark><br>' +
             '        return x + y + z + (x + 5);<br>    } else {<br>        return x + y + z + (z + 5);<br>    }<br>}<br></pre>');
     });
     it('is painting Aviram\'s second example correctly', () => {

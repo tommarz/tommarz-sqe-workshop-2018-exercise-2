@@ -1,1 +1,1 @@
-import './symbolic-substitution-test';
+import './symbolic-substitution_code-painter.test';
