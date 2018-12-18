@@ -1,21 +1,25 @@
 import assert from 'assert';
 import * as esprima from 'esprima';
 import {substitute_program_expr} from '../src/js/symbolic-substitution';
+import {paint_program} from '../src/js/code-painter';
+
+let first_example = esprima.parseScript('function foo(x, y, z){\n    let a = x + 1;\n    let b = a + y;\n' +
+    '    let c = 0;\n    if (b < z) {\n        c = c + 5;\n        return x + y + z + c;\n    } else if (b < z * 2) {\n' +
+    '        c = c + x + 5;\n        return x + y + z + c;\n    } else {\n        c = c + z + 5;\n' +
+    '        return x + y + z + c;\n    }\n}');
+
+let second_example = esprima.parseScript('function foo(x, y, z){\n    let a = x + 1;\n    let b = a + y;\n' +
+    '    let c = 0;\n    while (a < z) {\n        c = a + b;\n        z = c * 2;\n    }\n    return z;\n}\n');
 
 describe('The symbolic substitute', () => {
     it('is substituting Aviram\'s first example correctly', () => {
-        assert.deepEqual(substitute_program_expr(esprima.parseScript('function foo(x, y, z){\n    let a = x + 1;\n    let b = a + y;\n' +
-            '    let c = 0;\n    if (b < z) {\n        c = c + 5;\n        return x + y + z + c;\n    } else if (b < z * 2) {\n' +
-            '        c = c + x + 5;\n        return x + y + z + c;\n    } else {\n        c = c + z + 5;\n' +
-            '        return x + y + z + c;\n    }\n}')), 'function foo(x, y, z) {\n    if (x + 1 + y < z) {\n' +
+        assert.deepEqual(substitute_program_expr(first_example), 'function foo(x, y, z) {\n    if (x + 1 + y < z) {\n' +
             '        return x + y + z + 5;\n    } else if (x + 1 + y < z * 2) {\n        return x + y + z + (x + 5);\n    } else {\n' +
             '        return x + y + z + (z + 5);\n    }\n}');
     });
     it('is substituting Aviram\'s second example correctly', () => {
-        assert.deepEqual(substitute_program_expr(esprima.parseScript('function foo(x, y, z){\n    let a = x + 1;\n    let b = a + y;\n' +
-            '    let c = 0;\n    while (a < z) {\n        c = a + b;\n        z = c * 2;\n    }\n    return z;\n}\n')),
-        'function foo(x, y, z) {\n    while (x + 1 < z) {\n        z = (x + 1 + (x + 1 + y)) * 2;\n    }\n' +
-            '    return z;\n}');
+        assert.deepEqual(substitute_program_expr(second_example), 'function foo(x, y, z) {\n    while (x + 1 < z) {\n' +
+            '        z = (x + 1 + (x + 1 + y)) * 2;\n    }\n    return z;\n}');
     });
 });
 
@@ -68,5 +72,18 @@ describe('The symbolic substitute', () => {
             '    }\n    return z;\n}')),
         'function foo(x, y, z) {\n    while (x + 1 < z) {\n        if (x + 1 + y < x + y) {\n' +
             '            z = (x + 1 + (x + 1 + y)) * 2;\n        }\n    }\n    return z;\n}');
+    });
+});
+
+describe('The painter', () => {
+    it('is painting Aviram\'s first example correctly', () => {
+        assert.deepEqual(paint_program(first_example, [1, 2, 3]), '<pre>function foo(x, y, z) {<br>' +
+            '    if (<mark style="background-color:red">x + 1 + y < z</mark>) {<br>' +
+            '        return x + y + z + 5;<br>    } else if (<mark style="background-color:green">x + 1 + y < z * 2</mark>) {<br>' +
+            '        return x + y + z + (x + 5);<br>    } else {<br>        return x + y + z + (z + 5);<br>    }<br>}<br></pre>');
+    });
+    it('is painting Aviram\'s second example correctly', () => {
+        assert.deepEqual(paint_program(second_example, [4, 5, 6]), '<pre>function foo(x, y, z) {<br>    while (x + 1 < z) {<br>' +
+            '        z = (x + 1 + (x + 1 + y)) * 2;<br>    }<br>    return z;<br>}<br></pre>');
     });
 });

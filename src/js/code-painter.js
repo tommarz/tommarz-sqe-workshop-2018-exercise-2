@@ -16,10 +16,14 @@ function bind_params(func_decl, input) {
 function paint_program(program, input) {
     fun_str = escodegen.generate(program);
     paint_func_decl(program.body[0], input);
+    let split_painted_string = fun_str.split('\n');
+    fun_str = '<pre>';
+    split_painted_string.forEach((str)=> fun_str+=str + '<br>');
+    fun_str+='</pre>';
     return fun_str;
 }
 
-const paint = code => code ? paint_func_map[code.type] ? paint_func_map[code.type](code) : code : code;
+const paint = code => paint_func_map[code.type] ? paint_func_map[code.type](code) : code;
 
 function paint_func_decl(func_decl, input) {
     bind_params(func_decl, input);
